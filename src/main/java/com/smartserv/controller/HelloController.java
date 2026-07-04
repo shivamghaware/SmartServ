@@ -10,6 +10,6 @@ public class HelloController {
 
     @GetMapping()
     public String hello(){
-        return "smartserv project";
+        return "smartserv project updated";
     }
 }
