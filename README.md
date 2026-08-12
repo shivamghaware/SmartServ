@@ -136,8 +136,7 @@ SmartServ follows a **layered architecture** pattern:
 ┌─────────────────────────────────────────────────┐
 │              MySQL DATABASE                     │
 │  users, vehicles, appointments, job_card,       │
-│  job_card_item, job_card_evidence, inventory,   │
-│  invoice                                        │
+│  job_card_item, inventory, invoice              │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -196,7 +195,6 @@ SmartServ/
     │   │   │   ├── Appointment.java               # Appointments table
     │   │   │   ├── JobCard.java                   # Job cards table
     │   │   │   ├── JobCardItem.java               # Parts/items used in job
-    │   │   │   ├── JobCardEvidence.java            # Photo evidence for job
     │   │   │   ├── Inventory.java                 # Inventory/parts catalog
     │   │   │   ├── Invoice.java                   # Invoices table
     │   │   │   ├── Role.java                      # Enum: ADMIN, MANAGER, CUSTOMER, MECHANIC
@@ -223,11 +221,9 @@ SmartServ/
     │   │   │   │   ├── CreateJobCardDto.java
     │   │   │   │   ├── JobCardResponseDto.java
     │   │   │   │   ├── AddItemToJobCardDto.java
-    │   │   │   │   ├── AddEvidenceDto.java
     │   │   │   │   ├── AssignMechanicDto.java
     │   │   │   │   ├── CancelJobCardDto.java
     │   │   │   │   ├── JobCardItemDto.java
-    │   │   │   │   ├── JobCardEvidenceDto.java
     │   │   │   │   ├── ManagerDashboardDto.java
     │   │   │   │   └── MechanicDashboardDto.java
     │   │   │   │
@@ -304,78 +300,79 @@ SmartServ/
 
 ```mermaid
 erDiagram
+    USERS ||--o{ USERS : "supervises (1:N)"
+    USERS ||--o{ VEHICLES : "owns (1:N)"
+    USERS ||--o{ JOB_CARD : "manages as manager (1:N)"
+    USERS ||--o{ JOB_CARD : "assigned as mechanic (1:N)"
+    VEHICLES ||--o{ APPOINTMENTS : "services (1:N)"
+    APPOINTMENTS ||--o| JOB_CARD : "generates (1:1)"
+    JOB_CARD ||--|{ JOB_CARD_ITEM : "contains (1:N)"
+    INVENTORY ||--o{ JOB_CARD_ITEM : "supplies (1:N)"
+    JOB_CARD ||--o| INVOICE : "billed via (1:1)"
+
     USERS {
         bigint user_id PK
-        varchar user_name
-        varchar email UK
-        varchar password
-        enum user_role
+        varchar user_name "NOT NULL"
+        varchar email UK "NOT NULL"
+        varchar password "NOT NULL (BCrypt)"
+        enum user_role "ADMIN | MANAGER | CUSTOMER | MECHANIC"
         varchar mobile
         double salary
-        boolean is_active
-        bigint manager_id FK
+        boolean is_active "DEFAULT TRUE"
+        bigint manager_id FK "REFERENCES users(user_id)"
         datetime created_on
         datetime updated_on
     }
 
     VEHICLES {
         bigint vehicle_id PK
-        varchar license_plate UK
+        varchar license_plate UK "NOT NULL"
         varchar brand
         varchar model
         varchar color
         boolean is_active
-        bigint customer_id FK
+        bigint customer_id FK "REFERENCES users(user_id) NOT NULL"
         datetime created_on
         datetime updated_on
     }
 
     APPOINTMENTS {
         bigint appointment_id PK
-        date request_date
+        date request_date "NOT NULL"
+        time scheduled_time
         varchar problem_description
-        boolean is_rsa
-        varchar rsa_coordinates
-        enum status
+        boolean is_rsa "DEFAULT FALSE"
+        varchar rsa_coordinates "LAT,LNG"
+        enum status "PENDING | APPROVED | REJECTED | COMPLETED | CANCELLED | IN_PROGRESS"
         varchar customer_photo_url
         varchar rejection_reason
-        bigint vehicle_id FK
+        bigint vehicle_id FK "REFERENCES vehicles(vehicle_id) NOT NULL"
         datetime created_on
         datetime updated_on
     }
 
     JOB_CARD {
         bigint job_card_id PK
-        bigint appointment_id FK
-        bigint manager_id FK
-        bigint mechanic_id FK
+        bigint appointment_id FK,UK "REFERENCES appointments(appointment_id)"
+        bigint manager_id FK "REFERENCES users(user_id) NOT NULL"
+        bigint mechanic_id FK "REFERENCES users(user_id)"
         datetime start_time
         datetime completion_time
         date estimated_completion_date
         varchar cancellation_reason
-        enum job_card_status
+        enum job_card_status "CREATED | IN_PROGRESS | COMPLETED | CANCELLED"
         datetime created_on
         datetime updated_on
     }
 
     JOB_CARD_ITEM {
         bigint item_id PK
-        int quantity
-        double snapshot_price
-        varchar snapshot_item_name
-        double total_price
-        bigint job_card_id FK
-        bigint product_id FK
-        datetime created_on
-        datetime updated_on
-    }
-
-    JOB_CARD_EVIDENCE {
-        bigint evidence_id PK
-        varchar photo_url
-        varchar description
-        datetime uploaded_at
-        bigint job_card_id FK
+        int quantity "NOT NULL"
+        double snapshot_price "NOT NULL"
+        varchar snapshot_item_name "NOT NULL"
+        double total_price "NOT NULL"
+        bigint job_card_id FK "REFERENCES job_card(job_card_id) NOT NULL"
+        bigint product_id FK "REFERENCES inventory(product_id) NOT NULL"
         datetime created_on
         datetime updated_on
     }
@@ -384,9 +381,9 @@ erDiagram
         bigint product_id PK
         varchar item_name
         varchar sku_code UK
-        double current_price
+        double current_price "NOT NULL"
         int stock_quantity
-        boolean is_deleted
+        boolean is_deleted "DEFAULT FALSE"
         int version
         datetime created_on
         datetime updated_on
@@ -394,32 +391,21 @@ erDiagram
 
     INVOICE {
         bigint invoice_id PK
-        varchar invoice_number UK
-        double base_amount
-        double tax_percentage
-        double tax_amount
-        double total_amount
-        enum payment_status
+        varchar invoice_number UK "NOT NULL"
+        double base_amount "NOT NULL"
+        double tax_percentage "NOT NULL"
+        double tax_amount "NOT NULL"
+        double total_amount "NOT NULL"
+        enum payment_status "PENDING | INITIATED | PAID | FAILED | REFUNDED"
         varchar razorpay_order_id
         varchar razorpay_payment_id
         varchar razorpay_signature
-        enum payment_method
+        enum payment_method "CASH | CREDIT_CARD | DEBIT_CARD | UPI | NET_BANKING"
         datetime paid_at
-        bigint job_card_id FK
+        bigint job_card_id FK,UK "REFERENCES job_card(job_card_id) NOT NULL"
         datetime created_on
         datetime updated_on
     }
-
-    USERS ||--o{ USERS : manages
-    USERS ||--o{ VEHICLES : owns
-    VEHICLES ||--o{ APPOINTMENTS : has
-    APPOINTMENTS ||--|| JOB_CARD : generates
-    USERS ||--o{ JOB_CARD : manages
-    USERS ||--o{ JOB_CARD : assigned_to
-    JOB_CARD ||--o{ JOB_CARD_ITEM : contains
-    INVENTORY ||--o{ JOB_CARD_ITEM : supplies
-    JOB_CARD ||--o{ JOB_CARD_EVIDENCE : has
-    JOB_CARD ||--|| INVOICE : generates
 ```
 
 > **Notes**
@@ -658,14 +644,6 @@ All entities inherit from `BaseEntity`, which provides:
 | `DELETE` | `/api/job_cards/{jobCardId}/items/{itemId}` | Remove item from job card |
 | `GET` | `/api/job_cards/{id}/items` | Get job card items |
 
-#### Evidence (Photo) Management
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/job_cards/{id}/evidence` | Add photo evidence |
-| `DELETE` | `/api/job_cards/{jobCardId}/evidence/{evidenceId}` | Remove evidence |
-| `GET` | `/api/job_cards/{id}/evidence` | Get job card evidence |
-
 #### Query Endpoints
 
 | Method | Endpoint | Description |
@@ -817,7 +795,7 @@ All entities inherit from `BaseEntity`, which provides:
 |---|---|
 | **ADMIN** | Full system access |
 | **MANAGER** | Approve/reject appointments, create/manage job cards, assign mechanics, generate invoices, view dashboards |
-| **MECHANIC** | Start/complete work on assigned job cards, add items and evidence |
+| **MECHANIC** | Start/complete work on assigned job cards, add inventory parts/items |
 | **CUSTOMER** | Create appointments, view own appointments/vehicles/invoices, make payments |
 
 ### Manager-Mechanic Hierarchy
@@ -858,7 +836,6 @@ flowchart TD
     M --> N[Mechanic Starts Work]
     N --> O[Job Card Status: IN_PROGRESS]
     O --> P[Add Parts from Inventory]
-    O --> Q[Add Photo Evidence]
     P --> R{Stock Available?}
     R -->|Yes| S[Deduct from Inventory]
     R -->|No| T[InsufficientStockException]

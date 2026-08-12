@@ -55,11 +55,6 @@ export const jobCardService = {
     return response.data;
   },
 
-  addEvidence: async (id, dto) => {
-    const response = await api.post(`/job_cards/${id}/evidence`, dto);
-    return response.data;
-  },
-
   getByManager: async (managerId) => {
     const response = await api.get(`/job_cards/manager/${managerId}`);
     return response.data;

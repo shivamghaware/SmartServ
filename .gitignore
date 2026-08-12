@@ -52,3 +52,6 @@ Thumbs.db
 
 # Java
 *.class
+
+#documentation
+/docs/
