@@ -367,6 +367,16 @@ A JobCard needs to track both who created it (Manager) and who is doing the work
     private JobCard jobCard;
     ```
 * **Who owns the relationship?** The child `JobCardItem` owns it because it holds the physical `job_card_id` column. The `mappedBy = "jobCard"` property on the parent tells Hibernate to look at the child's `jobCard` property to find the mapping, rather than creating a separate mapping table.
+* **Why the database has no `job_card_item_id` in `job_card`**:
+  * In a relational database, you cannot store a list of IDs in a single cell (e.g., you can't put `[1, 2, 3]` inside a single `job_card` column). This is a rule of database design (First Normal Form).
+  * Therefore, the physical database foreign key (`job_card_id`) lives **only** in the child table: `job_card_item`.
+* **How Hibernate does the magic**:
+  * Because of `mappedBy = "jobCard"`, Hibernate knows that the child table owns the foreign key.
+  * When your Java code calls `jobCard.getItems()`, Hibernate automatically runs a background SQL query to find all items:
+    ```sql
+    SELECT * FROM job_card_item WHERE job_card_id = ?;
+    ```
+  * It then takes those database rows and injects them into the Java list. This is how it achieves a **two-way (bidirectional) link** in Java, using only **one column** in the database!
 
 ---
 
