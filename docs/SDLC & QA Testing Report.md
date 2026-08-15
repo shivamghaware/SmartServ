@@ -38,7 +38,7 @@ The development and evolution of the **SmartServ** enterprise platform adheres t
 
 ### 2.1 Centralized Exception Handling Architecture
 
-SmartServ employs a centralized exception handling architecture powered by Spring's `@RestControllerAdvice` in [GlobalExceptionHandler.java](file:///c:/Shivam%20New/PROJECT%202026/SmartServ/src/main/java/com/smartserv/exceptions/GlobalExceptionHandler.java). This decouples error transformation from business logic and guarantees **RFC 7807 Problem Details** compliance across all RESTful endpoints.
+SmartServ employs a centralized exception handling architecture powered by Spring's `@RestControllerAdvice` in [GlobalExceptionHandler.java](../core-service/src/main/java/com/smartserv/exceptions/GlobalExceptionHandler.java). This decouples error transformation from business logic and guarantees **RFC 7807 Problem Details** compliance across all RESTful endpoints.
 
 ```
                   +-------------------------------------------------------------+
