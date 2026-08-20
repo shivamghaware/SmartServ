@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.smartserv.entity.Appointment;
 import com.smartserv.entity.JobCard;
@@ -15,68 +13,27 @@ import com.smartserv.entity.User;
 
 public interface JobCardRepository extends JpaRepository<JobCard, Long> {
 
-    @Query("SELECT DISTINCT j FROM JobCard j " +
-           "LEFT JOIN FETCH j.appointment a " +
-           "LEFT JOIN FETCH a.vehicleDetails v " +
-           "LEFT JOIN FETCH v.customer " +
-           "LEFT JOIN FETCH j.manager " +
-           "LEFT JOIN FETCH j.mechanic " +
-           "LEFT JOIN FETCH j.items")
+    @EntityGraph(value = "JobCard.deep", type = EntityGraph.EntityGraphType.LOAD)
     List<JobCard> findAll();
 
     boolean existsByAppointmentId(Long appointmentId);
 
     JobCard findByAppointment(Appointment appointment);
 
-    @Query("SELECT DISTINCT j FROM JobCard j " +
-           "LEFT JOIN FETCH j.appointment a " +
-           "LEFT JOIN FETCH a.vehicleDetails v " +
-           "LEFT JOIN FETCH v.customer " +
-           "LEFT JOIN FETCH j.manager " +
-           "LEFT JOIN FETCH j.mechanic " +
-           "LEFT JOIN FETCH j.items " +
-           "WHERE j.manager = :manager")
-    List<JobCard> findByManager(@Param("manager") User manager);
+    @EntityGraph(value = "JobCard.deep", type = EntityGraph.EntityGraphType.LOAD)
+    List<JobCard> findByManager(User manager);
 
-    @Query("SELECT DISTINCT j FROM JobCard j " +
-           "LEFT JOIN FETCH j.appointment a " +
-           "LEFT JOIN FETCH a.vehicleDetails v " +
-           "LEFT JOIN FETCH v.customer " +
-           "LEFT JOIN FETCH j.manager " +
-           "LEFT JOIN FETCH j.mechanic " +
-           "LEFT JOIN FETCH j.items " +
-           "WHERE j.mechanic = :mechanic")
-    List<JobCard> findByMechanic(@Param("mechanic") User mechanic);
+    @EntityGraph(value = "JobCard.deep", type = EntityGraph.EntityGraphType.LOAD)
+    List<JobCard> findByMechanic(User mechanic);
 
-    @Query("SELECT DISTINCT j FROM JobCard j " +
-           "LEFT JOIN FETCH j.appointment a " +
-           "LEFT JOIN FETCH a.vehicleDetails v " +
-           "LEFT JOIN FETCH v.customer " +
-           "LEFT JOIN FETCH j.manager " +
-           "LEFT JOIN FETCH j.mechanic " +
-           "LEFT JOIN FETCH j.items " +
-           "WHERE j.jobCardStatus = :jobCardStatus")
-    List<JobCard> findByJobCardStatus(@Param("jobCardStatus") JobCardStatus jobCardStatus);
+    @EntityGraph(value = "JobCard.deep", type = EntityGraph.EntityGraphType.LOAD)
+    List<JobCard> findByJobCardStatus(JobCardStatus jobCardStatus);
 
-    @Query("SELECT DISTINCT j FROM JobCard j " +
-           "LEFT JOIN FETCH j.appointment a " +
-           "LEFT JOIN FETCH a.vehicleDetails v " +
-           "LEFT JOIN FETCH v.customer " +
-           "LEFT JOIN FETCH j.manager " +
-           "LEFT JOIN FETCH j.mechanic " +
-           "LEFT JOIN FETCH j.items " +
-           "WHERE j.manager.id = :managerId AND j.jobCardStatus = :status")
-    List<JobCard> findByManagerIdAndJobCardStatus(@Param("managerId") Long managerId, @Param("status") JobCardStatus status);
+    @EntityGraph(value = "JobCard.deep", type = EntityGraph.EntityGraphType.LOAD)
+    List<JobCard> findByManagerIdAndJobCardStatus(Long managerId, JobCardStatus status);
 
-    @Query("SELECT DISTINCT j FROM JobCard j " +
-           "LEFT JOIN FETCH j.appointment a " +
-           "LEFT JOIN FETCH a.vehicleDetails v " +
-           "LEFT JOIN FETCH v.customer " +
-           "LEFT JOIN FETCH j.manager " +
-           "LEFT JOIN FETCH j.mechanic " +
-           "LEFT JOIN FETCH j.items " +
-           "WHERE j.mechanic.id = :mechanicId AND j.jobCardStatus = :status")
-    List<JobCard> findByMechanicIdAndJobCardStatus(@Param("mechanicId") Long mechanicId, @Param("status") JobCardStatus status);
+    @EntityGraph(value = "JobCard.deep", type = EntityGraph.EntityGraphType.LOAD)
+    List<JobCard> findByMechanicIdAndJobCardStatus(Long mechanicId, JobCardStatus status);
 
     long countByMechanicIdAndJobCardStatus(Long mechanicId, JobCardStatus status);
 
@@ -88,8 +45,8 @@ public interface JobCardRepository extends JpaRepository<JobCard, Long> {
 
     Long countByMechanicId(Long mechanicId);
 
-
 }
+
 
 
 

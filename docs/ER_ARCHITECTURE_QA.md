@@ -412,3 +412,18 @@ By default, all our relationships are `LAZY`. If we want to show a manager dashb
 * **RSA Flag**: [Appointment.java](../core-service/src/main/java/com/smartserv/entity/Appointment.java) has a boolean column `is_rsa` to track if the vehicle broke down on the road and needs a towing truck or mobile mechanic.
 * **RSA Coordinates**: We store the latitude and longitude of the break-down location as a string (e.g., `"19.0760, 72.8777"`) in the `rsa_coordinates` column.
 * This separates emergency roadside appointments from standard schedule-based workshop appointments.
+
+---
+
+### Q19: Is there a simpler alternative to writing long, complex JPQL `@Query` statements for joins?
+* **Simple Answer**: Yes! Instead of writing duplicate `LEFT JOIN FETCH` JPQL strings over and over, we can use Spring Data's `@EntityGraph` annotation.
+* **The Problem**: Look at [JobCardRepository.java](../core-service/src/main/java/com/smartserv/repository/JobCardRepository.java). We repeat a 7-line JPQL query with `LEFT JOIN FETCH` for almost every search method just to solve the N+1 select problem.
+* **The Clean Alternative**:
+  1. We already defined a `@NamedEntityGraph(name = "JobCard.deep")` in our [JobCard.java](../core-service/src/main/java/com/smartserv/entity/JobCard.java) entity.
+  2. In the repository, we can delete the `@Query` string entirely and simply write:
+     ```java
+     @EntityGraph(value = "JobCard.deep", type = EntityGraph.EntityGraphType.LOAD)
+     List<JobCard> findByJobCardStatus(JobCardStatus status);
+     ```
+  3. Spring Data JPA will automatically build the method, run the joins, and fetch all nested objects in exactly **one database query** without any custom SQL!
+

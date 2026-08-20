@@ -8,6 +8,12 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [activeRoleFilter, setActiveRoleFilter] = useState('ALL');
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -23,8 +29,10 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const data = await userService.getAll();
-      setUsers(data);
+      const data = await userService.getPaginated(currentPage, pageSize, activeRoleFilter);
+      setUsers(data.content || []);
+      setTotalPages(data.totalPages || 0);
+      setTotalElements(data.totalElements || 0);
     } catch (err) {
       toast.error('Failed to load users');
     } finally {
@@ -34,7 +42,7 @@ const UserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentPage, pageSize, activeRoleFilter]);
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
@@ -75,11 +83,7 @@ const UserManagement = () => {
     }
   };
 
-  const activeUsersOnly = users.filter(u => u.isActive !== false && u.active !== false);
-
-  const filteredUsers = activeRoleFilter === 'ALL' 
-    ? activeUsersOnly 
-    : activeUsersOnly.filter(u => u.userRole === activeRoleFilter);
+  const filteredUsers = users;
 
   const getRoleBadge = (role) => {
     switch (role) {
@@ -111,15 +115,15 @@ const UserManagement = () => {
         </Button>
       </div>
 
-      <Tab.Container activeKey={activeRoleFilter} onSelect={(k) => setActiveRoleFilter(k)}>
+      <Tab.Container activeKey={activeRoleFilter} onSelect={(k) => { setActiveRoleFilter(k); setCurrentPage(0); }}>
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-transparent border-0 pt-3 px-4">
             <Nav variant="tabs">
-              <Nav.Item><Nav.Link eventKey="ALL" className="fw-semibold">All Users ({users.length})</Nav.Link></Nav.Item>
-              <Nav.Item><Nav.Link eventKey="ADMIN" className="fw-semibold">Admins</Nav.Link></Nav.Item>
-              <Nav.Item><Nav.Link eventKey="MANAGER" className="fw-semibold">Managers</Nav.Link></Nav.Item>
-              <Nav.Item><Nav.Link eventKey="MECHANIC" className="fw-semibold">Mechanics</Nav.Link></Nav.Item>
-              <Nav.Item><Nav.Link eventKey="CUSTOMER" className="fw-semibold">Customers</Nav.Link></Nav.Item>
+              <Nav.Item><Nav.Link eventKey="ALL" className="fw-semibold">All Users {activeRoleFilter === 'ALL' ? `(${totalElements})` : ''}</Nav.Link></Nav.Item>
+              <Nav.Item><Nav.Link eventKey="ADMIN" className="fw-semibold">Admins {activeRoleFilter === 'ADMIN' ? `(${totalElements})` : ''}</Nav.Link></Nav.Item>
+              <Nav.Item><Nav.Link eventKey="MANAGER" className="fw-semibold">Managers {activeRoleFilter === 'MANAGER' ? `(${totalElements})` : ''}</Nav.Link></Nav.Item>
+              <Nav.Item><Nav.Link eventKey="MECHANIC" className="fw-semibold">Mechanics {activeRoleFilter === 'MECHANIC' ? `(${totalElements})` : ''}</Nav.Link></Nav.Item>
+              <Nav.Item><Nav.Link eventKey="CUSTOMER" className="fw-semibold">Customers {activeRoleFilter === 'CUSTOMER' ? `(${totalElements})` : ''}</Nav.Link></Nav.Item>
             </Nav>
           </Card.Header>
           <Card.Body className="p-0">
@@ -162,6 +166,52 @@ const UserManagement = () => {
                 )}
               </tbody>
             </Table>
+            {totalElements > 0 && (
+              <div className="d-flex justify-content-between align-items-center p-3 border-top bg-light-subtle">
+                <div className="text-muted small fw-medium">
+                  Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalElements)} of {totalElements} users
+                </div>
+                <div className="d-flex align-items-center gap-3">
+                  <div className="d-flex align-items-center gap-2">
+                    <span className="text-muted small">Show:</span>
+                    <Form.Select 
+                      size="sm" 
+                      value={pageSize} 
+                      onChange={(e) => { 
+                        setPageSize(Number(e.target.value)); 
+                        setCurrentPage(0); 
+                      }}
+                      style={{ width: '75px', cursor: 'pointer' }}
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </Form.Select>
+                  </div>
+                  <div className="d-flex gap-1">
+                    <Button 
+                      variant="light" 
+                      size="sm" 
+                      className="border fw-semibold"
+                      disabled={currentPage === 0} 
+                      onClick={() => setCurrentPage(prev => prev - 1)}
+                    >
+                      <i className="bi bi-chevron-left me-1"></i>Previous
+                    </Button>
+                    <Button 
+                      variant="light" 
+                      size="sm" 
+                      className="border fw-semibold"
+                      disabled={currentPage >= totalPages - 1} 
+                      onClick={() => setCurrentPage(prev => prev + 1)}
+                    >
+                      Next<i className="bi bi-chevron-right ms-1"></i>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </Card.Body>
         </Card>
       </Tab.Container>

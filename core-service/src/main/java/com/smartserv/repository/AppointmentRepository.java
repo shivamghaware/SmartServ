@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
 import com.smartserv.entity.Appointment;
 import com.smartserv.entity.Status;
@@ -21,8 +20,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @EntityGraph(attributePaths = {"vehicleDetails", "vehicleDetails.customer"})
     List<Appointment> findByStatus(Status status);
 
-    @Query("SELECT COUNT(*) FROM Appointment WHERE status='PENDING'")
-    Long countPendingAppointments();
+    Long countByStatus(Status status);
 
     @EntityGraph(attributePaths = {"vehicleDetails", "vehicleDetails.customer"})
     List<Appointment> findByRsaTrue();
@@ -30,7 +28,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @EntityGraph(attributePaths = {"vehicleDetails", "vehicleDetails.customer"})
     List<Appointment> findByRsaTrueAndStatus(Status status);
 
-    @Query("SELECT COUNT(*) FROM Appointment WHERE rsa=true")
-    Long countRsaAppointment();
+    Long countByRsaTrue();
 }
 

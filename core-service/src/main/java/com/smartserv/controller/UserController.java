@@ -17,6 +17,10 @@ import com.smartserv.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.domain.Page;
+import com.smartserv.entity.Role;
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,6 +37,25 @@ public class UserController {
 	@GetMapping({"", "/getUsers"})
 	public ResponseEntity<?> getUsers() {
 		return ResponseEntity.ok(userService.getUsers());
+	}
+
+	@GetMapping("/page")
+	@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+	public ResponseEntity<?> getPaginatedUsers(
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size,
+			@RequestParam(required = false) String role) {
+		
+		Role userRole = null;
+		if (role != null && !role.trim().isEmpty() && !role.equalsIgnoreCase("ALL")) {
+			try {
+				userRole = Role.valueOf(role.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				return ResponseEntity.badRequest().body("Invalid role parameter.");
+			}
+		}
+		
+		return ResponseEntity.ok(userService.getUsers(page, size, userRole));
 	}
 
 	@GetMapping({"/{userId}", "/getUserById/{userId}"})

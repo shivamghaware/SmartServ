@@ -125,28 +125,28 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional(readOnly = true)
     public List<InventoryResponseDto> getAvailableItems() {
-        List<Inventory> inventories = inventoryRepo.findAvailableItems();
+        List<Inventory> inventories = inventoryRepo.findByDeletedFalseAndStockQuantityGreaterThan(0);
         return inventories.stream().map(this::mapToResponseDto).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<InventoryResponseDto> getLowStockItems() {
-        List<Inventory> items = inventoryRepo.findLowStockItems();
+        List<Inventory> items = inventoryRepo.findByDeletedFalseAndStockQuantityLessThan(LOW_STOCK_THRESHOLD);
         return items.stream().map(this::mapToResponseDto).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<InventoryResponseDto> getOutOfStockItems() {
-        List<Inventory> items = inventoryRepo.findOutOfStockItems();
+        List<Inventory> items = inventoryRepo.findByDeletedFalseAndStockQuantity(0);
         return items.stream().map(this::mapToResponseDto).collect(Collectors.toList());
     }
     
     @Override
     @Transactional(readOnly = true)
     public List<InventoryResponseDto> searchItems(String keyword) {
-        List<Inventory> items = inventoryRepo.searchByName(keyword);
+        List<Inventory> items = inventoryRepo.findByDeletedFalseAndItemNameContainingIgnoreCaseOrDeletedFalseAndSkuCodeContainingIgnoreCase(keyword, keyword);
         return items.stream().map(this::mapToResponseDto).collect(Collectors.toList());
     }
 

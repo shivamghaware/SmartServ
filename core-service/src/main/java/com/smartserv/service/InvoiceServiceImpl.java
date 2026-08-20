@@ -146,7 +146,7 @@ public class InvoiceServiceImpl implements InvoiceService{
 	
 	@Override
 	public List<InvoiceResponseDto> getInvoicesByCustomerId(Long customerId) {
-		List<Invoice> invoices = invoiceRepo.findByCustomerId(customerId);
+		List<Invoice> invoices = invoiceRepo.findByJobCard_Appointment_VehicleDetails_Customer_Id(customerId);
 		return invoices.stream().map(this::mapToResponseDto).collect(Collectors.toList());
 	}
 	
@@ -382,59 +382,4 @@ public class InvoiceServiceImpl implements InvoiceService{
 				.updatedAt(invoice.getLastUpdated())			
 				.build();
 	}
-
-	
-
-	
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-	
-
-
-
-
-	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

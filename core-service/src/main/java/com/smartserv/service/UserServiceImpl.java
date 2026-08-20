@@ -3,6 +3,11 @@ package com.smartserv.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -56,6 +61,18 @@ public class UserServiceImpl implements UserService {
 		List<User> users = userRepo.findByIsActiveTrue();
 
 		return users.stream().map(this::mapUserToResponseDto).collect(Collectors.toList());
+	}
+
+	@Override
+	public Page<UserResponseDto> getUsers(int page, int size, Role role) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+		Page<User> userPage;
+		if (role != null) {
+			userPage = userRepo.findByUserRoleAndIsActiveTrue(role, pageable);
+		} else {
+			userPage = userRepo.findByIsActiveTrue(pageable);
+		}
+		return userPage.map(this::mapUserToResponseDto);
 	}
 
 	@Override

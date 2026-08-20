@@ -213,7 +213,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 	@Override
 	public Long getPendingAppointmentCount() {
 		
-		return appointmentRepo.countPendingAppointments();
+		return appointmentRepo.countByStatus(Status.PENDING);
 	}
 	
 	@Override
@@ -241,7 +241,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 	
 	@Override
 	public Long getRsaCount() {
-		return appointmentRepo.countRsaAppointment();
+		return appointmentRepo.countByRsaTrue();
 	}
 
 	private void validateRsaCoordinates(String coordinates) {
@@ -290,32 +290,4 @@ public class AppointmentServiceImpl implements AppointmentService {
 				.updatedAt(appointment.getLastUpdated())
 				.build();
 	}
-
-
-	
-
-	
-
-
-
-
-
-	
-
-
-	
-
-
-	
-
-
-	
-
-
-	
-
-
-	
-	
-
 }

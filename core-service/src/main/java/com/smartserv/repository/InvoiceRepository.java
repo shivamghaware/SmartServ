@@ -25,8 +25,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
 
     @EntityGraph(attributePaths = {"jobCard", "jobCard.appointment", "jobCard.appointment.vehicleDetails", "jobCard.appointment.vehicleDetails.customer", "jobCard.items"})
-    @Query("SELECT i FROM Invoice i WHERE i.jobCard.appointment.vehicleDetails.customer.id = :customerId")
-    List<Invoice> findByCustomerId(@Param("customerId") Long customerId);
+    List<Invoice> findByJobCard_Appointment_VehicleDetails_Customer_Id(Long customerId);
 
     @EntityGraph(attributePaths = {"jobCard", "jobCard.appointment", "jobCard.appointment.vehicleDetails", "jobCard.appointment.vehicleDetails.customer", "jobCard.items"})
     List<Invoice> findByPaymentStatus(PaymentStatus paymentStatus);

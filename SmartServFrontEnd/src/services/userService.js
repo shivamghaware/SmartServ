@@ -23,6 +23,22 @@ export const userService = {
     }
   },
 
+  getPaginated: async (page = 0, size = 10, role = null) => {
+    try {
+      const params = { page, size };
+      if (role && role !== 'ALL') {
+        params.role = role;
+      }
+      const response = await api.get('/users/page', { params });
+      if (response.data && response.data.content) {
+        response.data.content = response.data.content.map(normalizeUser);
+      }
+      return response.data;
+    } catch (e) {
+      return { content: [], totalPages: 0, totalElements: 0 };
+    }
+  },
+
   getCustomers: async () => {
     try {
       const response = await api.get('/users/customers');
